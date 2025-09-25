@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حاسبة السعرات والجدول الغذائي</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+            direction: rtl;
+            text-align: right;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2, h3 {
+            text-align: center;
+            color: #004d40;
+        }
+
+        .input-section, .results-section, .manual-plan-section, .add-food-section {
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            background-color: #e8f5e9;
+        }
+
+        .results-section {
+            background-color: #f1f8e9;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #00796b;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+        
+        button.delete-button {
+            background-color: #d32f2f;
+        }
+        
+        button.delete-button:hover {
+            background-color: #b71c1c;
+        }
+
+        button:hover {
+            background-color: #004d40;
+        }
+
+        .meal-plan-builder {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .meal-builder-item {
+            background-color: #f1f8e9;
+            border: 1px solid #c8e6c9;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .meal-builder-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .meal-builder-controls select, .meal-builder-controls input {
+            flex-grow: 1;
+        }
+        
+        .food-list ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 10px;
+        }
+        
+        .food-list li {
+            background-color: #e8f5e9;
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .food-list li .remove-btn {
+            background-color: #d32f2f;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+        }
+    </style>
+</head>
+<body onload="loadData()">
+    <div class="container">
+        <h1>حاسبة السعرات والجدول الغذائي</h1>
+
+        <div class="input-section">
+            <h2>البيانات الشخصية والهدف</h2>
+            <div class="form-group">
+                <label for="age">العمر (سنوات):</label>
+                <input type="number" id="age" min="1" required>
+            </div>
+            <div class="form-group">
+                <label for="gender">الجنس:</label>
+                <select id="gender">
+                    <option value="male">ذكر</option>
+                    <option value="female">أنثى</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="weight">الوزن (كجم):</label>
+                <input type="number" id="weight" min="1" required>
+            </div>
+            <div class="form-group">
+                <label for="height">الطول (سم):</label>
+                <input type="number" id="height" min="1" required>
+            </div>
+            <div class="form-group">
+                <label for="activity">مستوى النشاط:</label>
+                <select id="activity">
+                    <option value="1.2">قليل جداً (عمل مكتبي)</option>
+                    <option value="1.375">خفيف (تمرين خفيف 1-3 أيام/أسبوع)</option>
+                    <option value="1.55">معتدل (تمرين 3-5 أيام/أسبوع)</option>
+                    <option value="1.725">عالي (تمرين يومي)</option>
+                    <option value="1.9">عالي جداً (تمرين مكثف يومي)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="goal">الهدف:</label>
+                <select id="goal">
+                    <option value="lose">خسارة وزن</option>
+                    <option value="maintain">ثبات وزن</option>
+                    <option value="gain">زيادة وزن</option>
+                </select>
+            </div>
+            <button onclick="calculateCalories()">احسب السعرات</button>
+            <button class="delete-button" onclick="clearData()">حذف البيانات المحفوظة</button>
+        </div>
+
+        <div id="results" class="results-section" style="display:none;">
+            <h2>نتائجك اليومية</h2>
+            <p>احتياجك اليومي من السعرات: <strong id="tdee-result"></strong> سعرة حرارية</p>
+            <p>سعراتك المستهدفة: <strong id="target-calories"></strong> سعرة حرارية</p>
+            <p>سعراتك المستهلكة حتى الآن: <strong id="consumed-calories">0</strong> سعرة حرارية</p>
+            <p>سعراتك المتبقية: <strong id="remaining-calories">0</strong> سعرة حرارية</p>
+            <hr>
+            <h3>مؤشر كتلة الجسم (BMI): <strong id="bmi-result"></strong></h3>
+            <p id="weight-recommendation"></p>
+        </div>
+
+        <div id="manual-plan-section" class="manual-plan-section" style="display:none;">
+            <h2>اختر وجباتك بنفسك</h2>
+            <div class="meal-plan-builder">
+                <div class="meal-builder-item">
+                    <h3>الفطور</h3>
+                    <div class="meal-builder-controls">
+                        <select id="breakfast-food-select" class="food-select"></select>
+                        <input type="number" id="breakfast-quantity" class="food-quantity" min="1" value="100" placeholder="الكمية (غرام)">
+                        <button onclick="addFood('breakfast')">أضف</button>
+                    </div>
+                    <div class="food-list">
+                        <ul id="breakfast-list"></ul>
+                    </div>
+                </div>
+
+                <div class="meal-builder-item">
+                    <h3>الغداء</h3>
+                    <div class="meal-builder-controls">
+                        <select id="lunch-food-select" class="food-select"></select>
+                        <input type="number" id="lunch-quantity" class="food-quantity" min="1" value="100" placeholder="الكمية (غرام)">
+                        <button onclick="addFood('lunch')">أضف</button>
+                    </div>
+                    <div class="food-list">
+                        <ul id="lunch-list"></ul>
+                    </div>
+                </div>
+
+                <div class="meal-builder-item">
+                    <h3>العشاء</h3>
+                    <div class="meal-builder-controls">
+                        <select id="dinner-food-select" class="food-select"></select>
+                        <input type="number" id="dinner-quantity" class="food-quantity" min="1" value="100" placeholder="الكمية (غرام)">
+                        <button onclick="addFood('dinner')">أضف</button>
+                    </div>
+                    <div class="food-list">
+                        <ul id="dinner-list"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="add-food-section" class="add-food-section" style="display:none;">
+            <h2>إضافة صنف غذائي جديد</h2>
+            <div class="form-group">
+                <label for="new-food-name">اسم الصنف:</label>
+                <input type="text" id="new-food-name" placeholder="مثال: دجاج مقلي">
+            </div>
+            <div class="form-group">
+                <label for="new-food-category">التصنيف:</label>
+                <select id="new-food-category">
+                    <option value="grains">حبوب وخبز</option>
+                    <option value="vegetables">خضار</option>
+                    <option value="fruits">فواكه</option>
+                    <option value="poultry">دواجن</option>
+                    <option value="meat">لحوم</option>
+                    <option value="fish">أسماك</option>
+                    <option value="legumes">بقوليات</option>
+                    <option value="nuts">مكسرات</option>
+                    <option value="dairy">ألبان</option>
+                    <option value="fats">دهون</option>
+                    <option value="sweets">حلويات</option>
+                    <option value="drinks">مشروبات</option>
+                    <option value="other">أخرى</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="new-food-calories">سعرات حرارية (لكل 100g):</label>
+                <input type="number" id="new-food-calories" min="0">
+            </div>
+            <div class="form-group">
+                <label for="new-food-protein">بروتين (غرام):</label>
+                <input type="number" id="new-food-protein" min="0">
+            </div>
+            <div class="form-group">
+                <label for="new-food-carbs">كربوهيدرات (غرام):</label>
+                <input type="number" id="new-food-carbs" min="0">
+            </div>
+            <div class="form-group">
+                <label for="new-food-fat">دهون (غرام):</label>
+                <input type="number" id="new-food-fat" min="0">
+            </div>
+            <button onclick="addNewFoodItem()">أضف الصنف</button>
+        </div>
+    </div>
+    <script>
+        let foodDatabase = {
+            'أرز أبيض': { calories: 130, protein: 2.4, carbs: 28, fat: 0.3, category: 'grains' },
+            'أرز بني': { calories: 111, protein: 2.6, carbs: 23, fat: 0.9, category: 'grains' },
+            'شوفان': { calories: 389, protein: 17, carbs: 66, fat: 7, category: 'grains' },
+            'خبز عربي': { calories: 275, protein: 9, carbs: 56, fat: 1.2, category: 'grains' },
+            'كرواسون': { calories: 406, protein: 8, carbs: 45, fat: 21, category: 'pastries' },
+            'مكرونة مسلوقة': { calories: 131, protein: 5, carbs: 25, fat: 1.1, category: 'grains' },
+            'توست أبيض': { calories: 265, protein: 9, carbs: 49, fat: 3.2, category: 'grains' },
+            'كينوا': { calories: 120, protein: 4.1, carbs: 21, fat: 1.9, category: 'grains' },
+            'ذرة مسلوقة': { calories: 96, protein: 3.4, carbs: 21, fat: 1.5, category: 'grains' },
+            'بطاطا مشوية': { calories: 93, protein: 2.5, carbs: 21, fat: 0.1, category: 'grains' },
+            'طماطم': { calories: 18, protein: 0.9, carbs: 3.9, fat: 0.2, category: 'vegetables' },
+            'خيار': { calories: 15, protein: 0.7, carbs: 3.6, fat: 0.1, category: 'vegetables' },
+            'خس': { calories: 15, protein: 1.4, carbs: 2.9, fat: 0.2, category: 'vegetables' },
+            'بروكلي': { calories: 34, protein: 2.8, carbs: 7, fat: 0.4, category: 'vegetables' },
+            'جزر': { calories: 41, protein: 0.9, carbs: 10, fat: 0.2, category: 'vegetables' },
+            'سبانخ': { calories: 23, protein: 2.9, carbs: 3.6, fat: 0.4, category: 'vegetables' },
+            'كرنب (ملفوف)': { calories: 25, protein: 1.3, carbs: 5.8, fat: 0.1, category: 'vegetables' },
+            'فلفل أحمر': { calories: 31, protein: 1, carbs: 6, fat: 0.3, category: 'vegetables' },
+            'باذنجان': { calories: 25, protein: 1, carbs: 6, fat: 0.2, category: 'vegetables' },
+            'تفاح': { calories: 52, protein: 0.3, carbs: 14, fat: 0.2, category: 'fruits' },
+            'موز': { calories: 89, protein: 1.1, carbs: 23, fat: 0.3, category: 'fruits' },
+            'برتقال': { calories: 47, protein: 0.9, carbs: 12, fat: 0.1, category: 'fruits' },
+            'عنب': { calories: 69, protein: 0.7, carbs: 18, fat: 0.2, category: 'fruits' },
+            'أفوكادو': { calories: 160, protein: 2, carbs: 9, fat: 15, category: 'fruits' },
+            'أناناس': { calories: 50, protein: 0.5, carbs: 13, fat: 0.1, category: 'fruits' },
+            'كيوي': { calories: 61, protein: 1.1, carbs: 15, fat: 0.5, category: 'fruits' },
+            'صدر دجاج مشوي': { calories: 165, protein: 31, carbs: 0, fat: 3.6, category: 'poultry' },
+            'دجاج مسلوق بدون جلد': { calories: 165, protein: 31, carbs: 0, fat: 3.6, category: 'poultry' },
+            'لحم بقر مشوي': { calories: 250, protein: 26, carbs: 0, fat: 15, category: 'meat' },
+            'لحم غنم مشوي': { calories: 294, protein: 25, carbs: 0, fat: 21, category: 'meat' },
+            'لحم ديك رومي مشوي': { calories: 135, protein: 30, carbs: 0, fat: 1, category: 'poultry' },
+            'سمك سلمون': { calories: 208, protein: 20, carbs: 0, fat: 13, category: 'fish' },
+            'سمك سردين': { calories: 208, protein: 25, carbs: 0, fat: 11, category: 'fish' },
+            'سمك تروتة': { calories: 148, protein: 20, carbs: 0, fat: 7, category: 'fish' },
+            'جمبري مسلوق': { calories: 99, protein: 24, carbs: 0.2, fat: 0.3, category: 'seafood' },
+            'تونة معلبة': { calories: 132, protein: 28, carbs: 0, fat: 1, category: 'fish' },
+            'بيض': { calories: 78, protein: 6.3, carbs: 0.6, fat: 5.3, category: 'dairy' },
+            'عدس مطبوخ': { calories: 116, protein: 9, carbs: 20, fat: 0.4, category: 'legumes' },
+            'حمص مسلوق': { calories: 164, protein: 9, carbs: 27, fat: 3, category: 'legumes' },
+            'فول مدمس': { calories: 110, protein: 7, carbs: 19, fat: 0.9, category: 'legumes' },
+            'فاصوليا سوداء مطبوخة': { calories: 132, protein: 8.9, carbs: 23, fat: 0.5, category: 'legumes' },
+            'فول الصويا مطبوخ': { calories: 172, protein: 16, carbs: 9.9, fat: 9, category: 'legumes' },
+            'فستق': { calories: 562, protein: 20, carbs: 28, fat: 45, category: 'nuts' },
+            'لوز': { calories: 579, protein: 21, carbs: 22, fat: 50, category: 'nuts' },
+            'جوز': { calories: 654, protein: 15, carbs: 14, fat: 65, category: 'nuts' },
+            'كاجو': { calories: 553, protein: 18, carbs: 30, fat: 44, category: 'nuts' },
+            'بذور شيا': { calories: 486, protein: 16, carbs: 42, fat: 31, category: 'seeds' },
+            'بذور دوار الشمس': { calories: 584, protein: 21, carbs: 20, fat: 51, category: 'seeds' },
+            'بذور قرع': { calories: 559, protein: 30, carbs: 10, fat: 49, category: 'seeds' },
+            'حليب كامل الدسم': { calories: 61, protein: 3.2, carbs: 4.8, fat: 3.3, category: 'dairy' },
+            'لبنة': { calories: 110, protein: 10, carbs: 3, fat: 6, category: 'dairy' },
+            'جبنة صفراء': { calories: 402, protein: 25, carbs: 1.3, fat: 33, category: 'dairy' },
+            'جبنة فيتا': { calories: 264, protein: 14, carbs: 4, fat: 21, category: 'dairy' },
+            'جبنة موتزاريلا': { calories: 280, protein: 28, carbs: 3, fat: 17, category: 'dairy' },
+            'زبادي كامل الدسم': { calories: 61, protein: 3.5, carbs: 4.7, fat: 3.3, category: 'dairy' },
+            'لبن زبادي يوناني': { calories: 59, protein: 10, carbs: 3.6, fat: 0.4, category: 'dairy' },
+            'زيت زيتون': { calories: 884, protein: 0, carbs: 0, fat: 100, category: 'fats' },
+            'زيت نباتي': { calories: 884, protein: 0, carbs: 0, fat: 100, category: 'fats' },
+            'زيت جوز الهند': { calories: 862, protein: 0, carbs: 0, fat: 100, category: 'fats' },
+            'زبدة': { calories: 717, protein: 0.9, carbs: 0.1, fat: 81, category: 'fats' },
+            'مايونيز': { calories: 680, protein: 1, carbs: 0.6, fat: 75, category: 'fats' },
+            'شوكولاتة بالحليب': { calories: 546, protein: 7.5, carbs: 61, fat: 31, category: 'sweets' },
+            'بسكويت عادي': { calories: 502, protein: 6.5, carbs: 67, fat: 23, category: 'sweets' },
+            'كيك ساده': { calories: 406, protein: 6, carbs: 50, fat: 20, category: 'sweets' },
+            'عسل طبيعي': { calories: 304, protein: 0.3, carbs: 82, fat: 0, category: 'sweets' },
+            'عصير برتقال طبيعي': { calories: 45, protein: 0.7, carbs: 10, fat: 0.2, category: 'drinks' },
+            'قهوة سادة': { calories: 2, protein: 0.3, carbs: 0, fat: 0, category: 'drinks' },
+            'مشروب كاكاو ساخن': { calories: 54, protein: 1, carbs: 12, fat: 0.8, category: 'drinks' }
+        };
+
+        let targetCalories = 0;
+        let consumedCalories = 0;
+        
+        function saveData() {
+            const userData = {
+                age: document.getElementById('age').value,
+                gender: document.getElementById('gender').value,
+                weight: document.getElementById('weight').value,
+                height: document.getElementById('height').value,
+                activity: document.getElementById('activity').value,
+                goal: document.getElementById('goal').value
+            };
+            localStorage.setItem('userData', JSON.stringify(userData));
+            localStorage.setItem('foodDatabase', JSON.stringify(foodDatabase));
+        }
+
+        function loadData() {
+            const savedUserData = localStorage.getItem('userData');
+            const savedFoodDatabase = localStorage.getItem('foodDatabase');
+
+            if (savedUserData) {
+                const userData = JSON.parse(savedUserData);
+                document.getElementById('age').value = userData.age;
+                document.getElementById('gender').value = userData.gender;
+                document.getElementById('weight').value = userData.weight;
+                document.getElementById('height').value = userData.height;
+                document.getElementById('activity').value = userData.activity;
+                document.getElementById('goal').value = userData.goal;
+            }
+
+            if (savedFoodDatabase) {
+                foodDatabase = JSON.parse(savedFoodDatabase);
+            }
+            
+            if (savedUserData) {
+                 calculateCalories();
+                 document.getElementById('add-food-section').style.display = 'block';
+                 document.getElementById('manual-plan-section').style.display = 'block';
+            }
+        }
+        
+        function clearData() {
+            localStorage.clear();
+            alert('تم حذف جميع البيانات المحفوظة.');
+            window.location.reload();
+        }
+
+        function calculateCalories() {
+            const age = document.getElementById('age').value;
+            const gender = document.getElementById('gender').value;
+            const weight = document.getElementById('weight').value;
+            const height = document.getElementById('height').value;
+            const activityFactor = document.getElementById('activity').value;
+            const goal = document.getElementById('goal').value;
+
+            if (!age || !weight || !height) {
+                alert('يرجى إدخال جميع البيانات الشخصية.');
+                return;
+            }
+
+            let bmr;
+            if (gender === 'male') {
+                bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5;
+            } else {
+                bmr = (10 * weight) + (6.25 * height) - (5 * age) - 161;
+            }
+
+            const tdee = bmr * activityFactor;
+            targetCalories = tdee;
+
+            if (goal === 'lose') {
+                targetCalories = tdee - 500;
+            } else if (goal === 'gain') {
+                targetCalories = tdee + 500;
+            }
+
+            document.getElementById('tdee-result').textContent = Math.round(tdee);
+            document.getElementById('target-calories').textContent = Math.round(targetCalories);
+            
+            // حساب وعرض مؤشر كتلة الجسم (BMI)
+            const heightInMeters = height / 100;
+            const bmi = weight / (heightInMeters * heightInMeters);
+            
+            let bmiStatus = '';
+            let weightRecommendation = '';
+            
+            // حساب نطاق الوزن الصحي
+            const minHealthyWeight = 18.5 * (heightInMeters * heightInMeters);
+            const maxHealthyWeight = 24.9 * (heightInMeters * heightInMeters);
+            
+            if (bmi < 18.5) {
+                bmiStatus = 'نحيف';
+                weightRecommendation = `وزنك الحالي أقل من المعدل الطبيعي. الوزن الصحي المناسب لك هو بين ${Math.round(minHealthyWeight)} و ${Math.round(maxHealthyWeight)} كجم.`;
+            } else if (bmi >= 18.5 && bmi < 24.9) {
+                bmiStatus = 'وزن صحي';
+                weightRecommendation = `وزنك الحالي ضمن المعدل الطبيعي. الوزن الصحي المناسب لك هو بين ${Math.round(minHealthyWeight)} و ${Math.round(maxHealthyWeight)} كجم.`;
+            } else if (bmi >= 25 && bmi < 29.9) {
+                bmiStatus = 'زيادة في الوزن';
+                weightRecommendation = `وزنك الحالي أكثر من المعدل الطبيعي. الوزن الصحي المناسب لك هو بين ${Math.round(minHealthyWeight)} و ${Math.round(maxHealthyWeight)} كجم.`;
+            } else if (bmi >= 30 && bmi < 34.9) {
+                bmiStatus = 'سمنة من الدرجة الأولى';
+                weightRecommendation = `وزنك الحالي ضمن فئة السمنة. الوزن الصحي المناسب لك هو بين ${Math.round(minHealthyWeight)} و ${Math.round(maxHealthyWeight)} كجم.`;
+            } else if (bmi >= 35 && bmi < 39.9) {
+                bmiStatus = 'سمنة من الدرجة الثانية';
+                weightRecommendation = `وزنك الحالي ضمن فئة السمنة. الوزن الصحي المناسب لك هو بين ${Math.round(minHealthyWeight)} و ${Math.round(maxHealthyWeight)} كجم.`;
+            } else {
+                bmiStatus = 'سمنة مفرطة';
+                weightRecommendation = `وزنك الحالي ضمن فئة السمنة المفرطة. الوزن الصحي المناسب لك هو بين ${Math.round(minHealthyWeight)} و ${Math.round(maxHealthyWeight)} كجم.`;
+            }
+            
+            document.getElementById('bmi-result').textContent = `${bmi.toFixed(2)} - ${bmiStatus}`;
+            document.getElementById('weight-recommendation').textContent = weightRecommendation;
+
+            consumedCalories = 0;
+            updateCalorieSummary();
+
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('add-food-section').style.display = 'block';
+            document.getElementById('manual-plan-section').style.display = 'block';
+            
+            populateFoodLists();
+            saveData(); 
+        }
+
+        function addNewFoodItem() {
+            const foodName = document.getElementById('new-food-name').value;
+            const foodCategory = document.getElementById('new-food-category').value;
+            const calories = parseFloat(document.getElementById('new-food-calories').value);
+            const protein = parseFloat(document.getElementById('new-food-protein').value);
+            const carbs = parseFloat(document.getElementById('new-food-carbs').value);
+            const fat = parseFloat(document.getElementById('new-food-fat').value);
+
+            if (!foodName || isNaN(calories) || isNaN(protein) || isNaN(carbs) || isNaN(fat) || calories < 0 || protein < 0 || carbs < 0 || fat < 0) {
+                alert('يرجى إدخال بيانات صحيحة وكاملة للصنف الجديد.');
+                return;
+            }
+
+            foodDatabase[foodName] = {
+                calories: calories,
+                protein: protein,
+                carbs: carbs,
+                fat: fat,
+                category: foodCategory
+            };
+
+            alert(`تمت إضافة صنف "${foodName}" بنجاح!`);
+            
+            document.getElementById('new-food-name').value = '';
+            document.getElementById('new-food-calories').value = '';
+            document.getElementById('new-food-protein').value = '';
+            document.getElementById('new-food-carbs').value = '';
+            document.getElementById('new-food-fat').value = '';
+
+            populateFoodLists();
+            saveData();
+        }
+
+        function populateFoodLists() {
+            const selectElements = document.querySelectorAll('.food-select');
+            
+            const categories = {};
+            for (const foodName in foodDatabase) {
+                const food = foodDatabase[foodName];
+                const category = food.category;
+                if (!categories[category]) {
+                    categories[category] = [];
+                }
+                categories[category].push(foodName);
+            }
+
+            selectElements.forEach(select => {
+                select.innerHTML = '';
+                const sortedCategories = Object.keys(categories).sort();
+                sortedCategories.forEach(category => {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = getCategoryLabel(category);
+                    
+                    categories[category].forEach(foodName => {
+                        const option = document.createElement('option');
+                        option.value = foodName;
+                        option.textContent = foodName;
+                        optgroup.appendChild(option);
+                    });
+                    
+                    select.appendChild(optgroup);
+                });
+            });
+        }
+        
+        function getCategoryLabel(category) {
+            const labels = {
+                'grains': 'حبوب وخبز',
+                'vegetables': 'خضار',
+                'fruits': 'فواكه',
+                'poultry': 'دواجن',
+                'meat': 'لحوم',
+                'fish': 'أسماك',
+                'seafood': 'مأكولات بحرية',
+                'legumes': 'بقوليات',
+                'nuts': 'مكسرات',
+                'seeds': 'بذور',
+                'dairy': 'ألبان ومنتجاتها',
+                'fats': 'زيوت ودهون',
+                'sweets': 'حلويات',
+                'drinks': 'مشروبات',
+                'pastries': 'معجنات',
+                'other': 'أخرى'
+            };
+            return labels[category] || category;
+        }
+
+        function addFood(meal) {
+            const selectElement = document.getElementById(`${meal}-food-select`);
+            const quantityInput = document.getElementById(`${meal}-quantity`);
+            const foodName = selectElement.value;
+            const quantity = quantityInput.value;
+
+            if (!foodName || !quantity || quantity <= 0) {
+                alert('يرجى اختيار الطعام وإدخال كمية صحيحة.');
+                return;
+            }
+
+            const foodData = foodDatabase[foodName];
+            const calories = (foodData.calories / 100) * quantity;
+            
+            if (consumedCalories + calories > targetCalories) {
+                alert('لا يمكن إضافة هذا الصنف لأنه سيتجاوز السعرات المتبقية.');
+                return;
+            }
+
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `
+                <span>${foodName} (${quantity} غرام) - ${Math.round(calories)} سعرة</span>
+                <button class="remove-btn" onclick="removeFood(this, ${calories})">×</button>
+            `;
+            document.getElementById(`${meal}-list`).appendChild(listItem);
+
+            consumedCalories += calories;
+            updateCalorieSummary();
+        }
+
+        function removeFood(button, calories) {
+            const listItem = button.parentElement;
+            listItem.remove();
+            
+            consumedCalories -= calories;
+            updateCalorieSummary();
+        }
+
+        function updateCalorieSummary() {
+            const remainingCalories = targetCalories - consumedCalories;
+            document.getElementById('consumed-calories').textContent = Math.round(consumedCalories);
+            document.getElementById('remaining-calories').textContent = Math.round(remainingCalories);
+        }
+    </script>
+</body>
+</html>
